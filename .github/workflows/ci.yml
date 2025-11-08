@@ -23,6 +23,7 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: cpu-monitor-${{ github.run_id }}-${{ github.run_attempt }}
+        name: cpu-monitor
         path: cpu_monitor
+        overwrite: true
         
