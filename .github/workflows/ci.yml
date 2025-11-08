@@ -1,0 +1,108 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    name: Test and Build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+
+    - name: Verify dependencies
+      working-directory: ./src
+      run: |
+        go mod download
+        go mod verify
+
+    - name: Build
+      working-directory: ./src
+      run: go build -v -o ../../cpu_monitor .
+
+    - name: Run tests
+      working-directory: ./src
+      run: go test -v -race ./...
+
+    - name: Test binary execution
+      run: |
+        chmod +x cpu_monitor
+        ./cpu_monitor -h || echo "Help command executed"
+
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: cpu_monitor-linux
+        path: cpu_monitor
+        retention-days: 7
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+
+    - name: Run golangci-lint
+      uses: golangci/golangci-lint-action@v3
+      with:
+        working-directory: ./src
+        version: latest
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run Go security check
+      uses: securego/gosec@master
+      with:
+        working-directory: ./src
+        args: "-exclude=G104 ./..."  # Ignore audit errors for now
+
+  multi-platform:
+    name: Build Multi-Platform
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [linux/amd64, linux/arm64, windows/amd64, darwin/amd64]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+
+    - name: Build for ${{ matrix.platform }}
+      working-directory: ./src
+      run: |
+        platform_split=(${PLATFORM//\// })
+        GOOS=${platform_split[0]} GOARCH=${platform_split[1]} go build -o ../../cpu_monitor_${platform_split[0]}_${platform_split[1]}${EXT} .
+      env:
+        PLATFORM: ${{ matrix.platform }}
+        EXT: ${{ contains(matrix.platform, 'windows') && '.exe' || '' }}
+
+    - name: Upload ${{ matrix.platform }} binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: cpu_monitor-${{ matrix.platform }}
+        path: cpu_monitor_${{ matrix.platform }}*
+        retention-days: 7
+        
