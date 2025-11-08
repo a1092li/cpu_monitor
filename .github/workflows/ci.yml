@@ -16,13 +16,13 @@ jobs:
         go-version: '1.21'
 
     - name: Build
-      working-directory: ./src
       run: |
-        go build -v -o cpu_monitor .
+        cd src
+        go build -v -o ../cpu_monitor .
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: cpu-monitor-$(date +%s)
-        path: src/cpu_monitor
+        name: cpu-monitor-${{ github.run_id }}-${{ github.run_attempt }}
+        path: cpu_monitor
         
