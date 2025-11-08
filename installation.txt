@@ -1,1 +1,1 @@
-go build showcores2.go
+go build showcores.go
