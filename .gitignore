@@ -1,1 +1,19 @@
+# Binaries
+cpu_monitor
+cpu_monitor-linux
+cpu_monitor.exe
+dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Go
+go.sum
 showcores2

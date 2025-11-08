@@ -1,3 +1,6 @@
+// Copyright (c) 2025 Aleksandr Lebedev
+// Licensed under the MIT License
+// See LICENSE file for details
 package main
 
 import (
@@ -45,7 +48,7 @@ func readCPUStats() (map[string]CPUStats, error) {
 		cpuName := fields[0]
 		var cpuStats CPUStats
 
-		// Парсим числовые значения
+		// Parse numeric values
 		values := make([]uint64, len(fields)-1)
 		for i := 1; i < len(fields); i++ {
 			val, err := strconv.ParseUint(fields[i], 10, 64)
@@ -55,7 +58,7 @@ func readCPUStats() (map[string]CPUStats, error) {
 			values[i-1] = val
 		}
 
-		// Заполняем структуру в зависимости от количества доступных полей
+		// Fill structure depends on available fields
 		if len(values) > 0 {
 			cpuStats.User = values[0]
 		}
@@ -91,18 +94,18 @@ func readCPUStats() (map[string]CPUStats, error) {
 }
 
 func calculateCPUUsage(stats1, stats2 CPUStats) float64 {
-	// Вычисляем общее время CPU
+	// Calculate Total CPU usage
 	total1 := stats1.User + stats1.Nice + stats1.System + stats1.Idle +
 		stats1.IOWait + stats1.IRQ + stats1.SoftIRQ + stats1.Steal + stats1.Guest
 
 	total2 := stats2.User + stats2.Nice + stats2.System + stats2.Idle +
 		stats2.IOWait + stats2.IRQ + stats2.SoftIRQ + stats2.Steal + stats2.Guest
 
-	// Вычисляем время простоя
+	// Calculate wait time
 	idle1 := stats1.Idle + stats1.IOWait
 	idle2 := stats2.Idle + stats2.IOWait
 
-	// Вычисляем разницу
+	// Calculate difference
 	totalDiff := total2 - total1
 	idleDiff := idle2 - idle1
 
@@ -110,7 +113,7 @@ func calculateCPUUsage(stats1, stats2 CPUStats) float64 {
 		return 0.0
 	}
 
-	// Процент использования = 100% - процент простоя
+	// Usage Time = 100% - Wait Time
 	usage := 100.0 * (float64(totalDiff-idleDiff) / float64(totalDiff))
 	return usage
 }
@@ -119,7 +122,7 @@ func parseCPUCores(args []string) ([]int, error) {
 	var cores []int
 
 	if len(args) == 0 {
-		// По умолчанию мониторим ядра 0,1,2,3
+		// Show Cores 0,1,2,3 by default
 		return []int{0, 1, 2, 3}, nil
 	}
 
@@ -145,8 +148,7 @@ func getCPUName(core int) string {
 }
 
 func getDisplayName(core int) string {
-	// Для корректного выравнивания используем фиксированную ширину
-	return fmt.Sprintf("CPU %3d", core)
+	return fmt.Sprintf("CPU %d", core)
 }
 
 func showUsage() {
@@ -167,7 +169,7 @@ func main() {
 	var coresToMonitor []int
 	var err error
 
-	// Парсим аргументы командной строки
+	// Arguments parsing
 	if len(os.Args) > 1 {
 		if os.Args[1] == "-h" || os.Args[1] == "--help" {
 			showUsage()
@@ -180,14 +182,14 @@ func main() {
 			return
 		}
 	} else {
-		// Используем ядра по умолчанию
+		// Use Cores by default
 		coresToMonitor = []int{0, 1, 2, 3}
 	}
 
 	fmt.Printf("CPU Cores Monitor: %v\n", coresToMonitor)
 	fmt.Println("Ctrl+C to exit")
 
-	// Динамически вычисляем ширину разделителя
+	// Calculate separator width
 	separatorWidth := 20 + len(coresToMonitor)*15
 	if separatorWidth < 60 {
 		separatorWidth = 60
@@ -195,24 +197,24 @@ func main() {
 	fmt.Println(strings.Repeat("-", separatorWidth))
 
 	for {
-		// Первое измерение
+		// First stats
 		stats1, err := readCPUStats()
 		if err != nil {
 			fmt.Printf("Error read CPU stat: %v\n", err)
 			return
 		}
 
-		// Ждем 1 секунду
+		// Wait 1 second
 		time.Sleep(1 * time.Second)
 
-		// Второе измерение
+		// Second stats
 		stats2, err := readCPUStats()
 		if err != nil {
 			fmt.Printf("Error read CPU stat: %v\n", err)
 			return
 		}
 
-		// Выводим загрузку для указанных ядер
+		// Print CPUs Load
 		fmt.Printf("\rTime: %s ", time.Now().Format("15:04:05"))
 
 		for _, core := range coresToMonitor {
@@ -228,13 +230,7 @@ func main() {
 			fmt.Printf("| %s: %5.1f%% ", displayName, usage)
 		}
 
-		// Также показываем общую загрузку CPU
-		//if stats1["cpu"] != (CPUStats{}) && stats2["cpu"] != (CPUStats{}) {
-		//	totalUsage := calculateCPUUsage(stats1["cpu"], stats2["cpu"])
-		//	fmt.Printf("| Всего: %5.1f%%", totalUsage)
-		//}
-
-		// Используем \r для обновления строки вместо добавления новой
+		// Use \r to update line instead of adding new line
 		fmt.Print("   ")
 	}
 }
