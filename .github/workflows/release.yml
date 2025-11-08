@@ -1,64 +1,40 @@
-name: Build and Release
+name: Release
 
 on:
   push:
-    tags: [ 'v*' ]
+    tags: ['v*']
 
 jobs:
-  build-releases:
-    name: Build Releases
+  release:
     runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        go-version: [1.21]
-        platform: [
-          'linux/amd64',
-          'linux/arm64', 
-          'windows/amd64',
-          'darwin/amd64',
-          'darwin/arm64'
-        ]
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
     
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
-        go-version: ${{ matrix.go-version }}
-    
-    - name: Build
+        go-version: '1.21'
+
+    - name: Build for multiple platforms
       run: |
         cd src
-        platform_split=(${PLATFORM//\// })
-        GOOS=${platform_split[0]} GOARCH=${platform_split[1]} go build -o ../cpu_monitor_${platform_split[0]}_${platform_split[1]}${EXT} main.go
-      env:
-        PLATFORM: ${{ matrix.platform }}
-        EXT: ${{ contains(matrix.platform, 'windows') && '.exe' || '' }}
-    
-    - name: Upload binaries
-      uses: actions/upload-artifact@v4
-      with:
-        name: cpu_monitor-${{ github.ref_name }}
-        path: cpu_monitor_*
+        # Linux
+        GOOS=linux GOARCH=amd64 go build -o ../cpu_monitor_linux_amd64 .
+        GOOS=linux GOARCH=arm64 go build -o ../cpu_monitor_linux_arm64 .
+        # Windows
+        GOOS=windows GOARCH=amd64 go build -o ../cpu_monitor_windows_amd64.exe .
+        # macOS
+        GOOS=darwin GOARCH=amd64 go build -o ../cpu_monitor_darwin_amd64 .
+        GOOS=darwin GOARCH=arm64 go build -o ../cpu_monitor_darwin_arm64 .
 
-  create-release:
-    name: Create Release
-    runs-on: ubuntu-latest
-    needs: build-releases
-    if: startsWith(github.ref, 'refs/tags/')
-    
-    steps:
-    - name: Download all artifacts
-      uses: actions/download-artifact@v4
-      with:
-        path: artifacts
-    
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        files: artifacts/**/*
+        files: |
+          cpu_monitor_linux_amd64
+          cpu_monitor_linux_arm64
+          cpu_monitor_windows_amd64.exe
+          cpu_monitor_darwin_amd64
+          cpu_monitor_darwin_arm64
         generate_release_notes: true
         
