@@ -54,47 +54,6 @@ jobs:
         file cpu_monitor_* || true
 
     - name: Create Release
-      uses: softprops/action-gh-release@v1
-      with:
-        files: |
-          cpu_monitor_linux_amd64
-          cpu_monitor_linux_arm64
-          cpu_monitor_windows_amd64.exe
-          cpu_monitor_darwin_amd64
-          cpu_monitor_darwin_arm64
-        generate_release_notes: true
-
-name: Release
-
-on:
-  push:
-    tags: ['v*']
-
-jobs:
-  release:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.21'
-
-    - name: Generate dependencies
-      working-directory: ./src
-      run: go mod tidy
-
-    - name: Build all platforms
-      working-directory: ./src
-      run: |
-        GOOS=linux GOARCH=amd64 go build -o ../cpu_monitor_linux_amd64 .
-        GOOS=linux GOARCH=arm64 go build -o ../cpu_monitor_linux_arm64 .
-        GOOS=windows GOARCH=amd64 go build -o ../cpu_monitor_windows_amd64.exe .
-        GOOS=darwin GOARCH=amd64 go build -o ../cpu_monitor_darwin_amd64 .
-        GOOS=darwin GOARCH=arm64 go build -o ../cpu_monitor_darwin_arm64 .
-
-    - name: Create Release
       uses: actions/create-release@v1
       id: create_release
       env:
@@ -154,4 +113,3 @@ jobs:
         asset_path: ./cpu_monitor_darwin_arm64
         asset_name: cpu_monitor_darwin_arm64
         asset_content_type: application/octet-stream
-        
