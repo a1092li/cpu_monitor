@@ -99,9 +99,7 @@ Found a bug? Please open an issue with:
 - Expected vs actual behavior
 
 ## 📚 Documentation
-- Installation Guide
-https://docs/INSTALL.md
-- Usage Examples
-https://docs/USAGE.md
-- Contributing Guide
-https://contributing.md/
+- [Installation Guide](https://github.com/a1092li/cpu_monitor/blob/main/docs/INSTALL.md)
+- [Usage Examples](https://github.com/a1092li/cpu_monitor/blob/main/docs/USAGE.md)
+- [Contributing Guide](https://github.com/a1092li/cpu_monitor/blob/main/docs/CONTRIBUTING.md)
+
