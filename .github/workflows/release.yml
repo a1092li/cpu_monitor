@@ -18,29 +18,10 @@ jobs:
     - name: Generate dependencies
       working-directory: ./src
       run: go mod tidy
-      
-    - name: Cache Go modules
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cache/go-build
-          ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-
-    - name: Debug - Show directory structure
-      run: |
-        echo "=== Current directory ==="
-        pwd
-        ls -la
-        echo "=== src directory ==="
-        ls -la src/
 
     - name: Build all platforms
       working-directory: ./src
       run: |
-        # Build for different platforms
         GOOS=linux GOARCH=amd64 go build -o ../cpu_monitor_linux_amd64 .
         GOOS=linux GOARCH=arm64 go build -o ../cpu_monitor_linux_arm64 .
         GOOS=windows GOARCH=amd64 go build -o ../cpu_monitor_windows_amd64.exe .
@@ -53,63 +34,17 @@ jobs:
         ls -la cpu_monitor_*
         file cpu_monitor_* || true
 
-    - name: Create Release
-      uses: actions/create-release@v1
-      id: create_release
+    - name: Upload Release Assets
+      uses: ncipollo/release-action@v1
+      with:
+        tag: ${{ github.ref_name }}
+        artifacts: |
+          cpu_monitor_linux_amd64,
+          cpu_monitor_linux_arm64,
+          cpu_monitor_windows_amd64.exe,
+          cpu_monitor_darwin_amd64,
+          cpu_monitor_darwin_arm64
+        generateReleaseNotes: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
-        prerelease: false
-
-    - name: Upload Linux AMD64 Binary
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./cpu_monitor_linux_amd64
-        asset_name: cpu_monitor_linux_amd64
-        asset_content_type: application/octet-stream
-
-    - name: Upload Linux ARM64 Binary
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./cpu_monitor_linux_arm64
-        asset_name: cpu_monitor_linux_arm64
-        asset_content_type: application/octet-stream
-
-    - name: Upload Windows AMD64 Binary
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./cpu_monitor_windows_amd64.exe
-        asset_name: cpu_monitor_windows_amd64.exe
-        asset_content_type: application/octet-stream
-
-    - name: Upload Darwin AMD64 Binary
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./cpu_monitor_darwin_amd64
-        asset_name: cpu_monitor_darwin_amd64
-        asset_content_type: application/octet-stream
-
-    - name: Upload Darwin ARM64 Binary
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./cpu_monitor_darwin_arm64
-        asset_name: cpu_monitor_darwin_arm64
-        asset_content_type: application/octet-stream
+        
