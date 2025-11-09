@@ -2,18 +2,33 @@ name: Release
 
 on:
   push:
-    tags: ['v*']
+    tags: ['v*.*.*']
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
     
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
         go-version: '1.21'
+
+    - name: Debug - Show info
+      run: |
+        echo "Tag: ${{ github.ref }}"
+        echo "Tag name: ${{ github.ref_name }}"
+        echo "Event: ${{ github.event_name }}"
+        echo "=== Current directory ==="
+        pwd
+        ls -la
+        echo "=== src directory ==="
+        ls -la src/
 
     - name: Generate dependencies
       working-directory: ./src
@@ -31,13 +46,12 @@ jobs:
 
     - name: Verify built files
       run: |
-        echo "=== Built files in root directory ==="
-        pwd
+        echo "=== Built files ==="
         ls -la cpu_monitor_*
-        echo "=== File types ==="
-        file cpu_monitor_* || true
+        echo "=== File sizes ==="
+        du -h cpu_monitor_*
 
-    - name: Create Release with Assets
+    - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
         files: |
