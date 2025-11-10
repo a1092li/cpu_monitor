@@ -40,7 +40,6 @@ jobs:
         # Build for different platforms
         GOOS=linux GOARCH=amd64 go build -o ../cpu_monitor_linux_amd64 .
         GOOS=linux GOARCH=arm64 go build -o ../cpu_monitor_linux_arm64 .
-        GOOS=windows GOARCH=amd64 go build -o ../cpu_monitor_windows_amd64.exe .
 
     - name: Verify built files
       run: |
@@ -55,7 +54,6 @@ jobs:
         files: |
           cpu_monitor_linux_amd64
           cpu_monitor_linux_arm64
-          cpu_monitor_windows_amd64.exe
         generate_release_notes: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
